@@ -11,7 +11,7 @@
       "name": "secure-properties",
       "title": "Secure Properties",
       "description": "",
-      "mode": "no-view"
+      "mode": "view"
     },
     {
       "name": "generate-jks",
