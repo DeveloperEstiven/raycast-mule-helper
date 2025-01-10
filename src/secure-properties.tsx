@@ -1,4 +1,15 @@
-import { Action, ActionPanel, Clipboard, closeMainWindow, Form, showHUD, showToast, Toast } from "@raycast/api";
+import {
+  Action,
+  ActionPanel,
+  Clipboard,
+  closeMainWindow,
+  Form,
+  getPreferenceValues,
+  openExtensionPreferences,
+  showHUD,
+  showToast,
+  Toast,
+} from "@raycast/api";
 import { FormValidation, runAppleScript, useForm } from "@raycast/utils";
 import fs from "fs";
 import { IncomingMessage } from "http";
@@ -14,11 +25,16 @@ const JAR_NAME = "secure-properties-tool.jar";
 const JAR_PATH = path.join(HOME_DIR, JAR_NAME);
 const JAVA_COMMAND = "java -cp";
 const MAIN_CLASS = "com.mulesoft.tools.SecurePropertiesTool";
-const ENCRYPTION_PARAMS = "string encrypt Blowfish CBC password";
+const ENCRYPTION_PARAMS_BASE = "string encrypt Blowfish CBC";
 const JAR_DOWNLOAD_URL = "https://docs.mulesoft.com/mule-runtime/latest/_attachments/secure-properties-tool-j17.jar";
 
 interface SecurePropertiesForm {
   prompt: string;
+  password?: string;
+}
+
+interface Preferences {
+  defaultPassword: string;
 }
 
 const runShellScript = async (command: string): Promise<string> => {
@@ -51,7 +67,7 @@ const downloadJar = async (): Promise<void> => {
   const fileStream = fs.createWriteStream(JAR_PATH);
 
   try {
-    const response = await new Promise<IncomingMessage>((resolve, reject) => {
+    const response: IncomingMessage = await new Promise((resolve, reject) => {
       const request = https.get(JAR_DOWNLOAD_URL, (res) => {
         if (res.statusCode !== 200) {
           res.resume();
@@ -78,9 +94,10 @@ const downloadJar = async (): Promise<void> => {
 };
 
 export default function Command() {
+  const preferences = getPreferenceValues<Preferences>();
   const { handleSubmit, itemProps, reset } = useForm<SecurePropertiesForm>({
     async onSubmit(values) {
-      const { prompt } = values;
+      const { prompt, password } = values;
 
       if (!prompt) {
         await showToast({
@@ -95,12 +112,6 @@ export default function Command() {
         const jarExists = await doesJarExist();
 
         if (!jarExists) {
-          await showToast({
-            style: Toast.Style.Animated,
-            title: "Downloading JAR",
-            message: "secure-properties-tool.jar is missing. Downloading...",
-          });
-
           await downloadJar();
 
           await showToast({
@@ -110,13 +121,22 @@ export default function Command() {
           });
         }
 
-        const command = `cd "${HOME_DIR}" && ${JAVA_COMMAND} "${JAR_PATH}" ${MAIN_CLASS} ${ENCRYPTION_PARAMS} "${prompt}"`;
+        const encryptionPassword = password || preferences.defaultPassword;
+
+        if (!encryptionPassword) {
+          await showHUD("Default password is not set. Please set it in preferences.");
+          await openExtensionPreferences();
+          return;
+        }
+
+        const encryptionParams = `${ENCRYPTION_PARAMS_BASE} "${encryptionPassword}"`;
+        const command = `cd "${HOME_DIR}" && ${JAVA_COMMAND} "${JAR_PATH}" ${MAIN_CLASS} ${encryptionParams} "${prompt}"`;
         const output = await runShellScript(command);
 
         await Clipboard.copy(output);
-        console.log("Command output:", output);
+        console.log("Command output:");
 
-        await showHUD("Command executed and result copied to clipboard.");
+        await showHUD(`👌 Copied to clipboard: ${output}`);
 
         reset();
         await closeMainWindow();
@@ -139,10 +159,12 @@ export default function Command() {
       actions={
         <ActionPanel>
           <Action.SubmitForm title="Encrypt Prompt" onSubmit={handleSubmit} />
+          <Action title="Open Extension Preferences" onAction={openExtensionPreferences} />
         </ActionPanel>
       }
     >
       <Form.TextField title="Prompt String" placeholder="Enter the string to encrypt" {...itemProps.prompt} />
+      <Form.TextField title="Password" placeholder="Optional: Enter a custom password" {...itemProps.password} />
     </Form>
   );
 }

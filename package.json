@@ -10,7 +10,7 @@
     {
       "name": "secure-properties",
       "title": "Secure Properties",
-      "description": "",
+      "description": "Encrypts a given prompt string using Blowfish CBC encryption.",
       "mode": "view"
     },
     {
@@ -20,17 +20,26 @@
       "mode": "no-view"
     }
   ],
+  "preferences": [
+    {
+      "description": "Encryption default password.",
+      "type": "password",
+      "name": "defaultPassword",
+      "title": "Default Password",
+      "required": true
+    }
+  ],
   "dependencies": {
     "@raycast/api": "^1.88.4",
-    "@raycast/utils": "^1.17.0"
+    "@raycast/utils": "^1.18.1"
   },
   "devDependencies": {
     "@raycast/eslint-config": "^1.0.11",
-    "@types/node": "20.8.10",
-    "@types/react": "18.3.3",
-    "eslint": "^8.57.0",
-    "prettier": "^3.3.3",
-    "typescript": "^5.4.5"
+    "@types/node": "20.17.12",
+    "@types/react": "18.3.18",
+    "eslint": "^8.57.1",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.3"
   },
   "scripts": {
     "build": "ray build",
