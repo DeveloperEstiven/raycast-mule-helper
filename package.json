@@ -8,21 +8,21 @@
   "license": "MIT",
   "commands": [
     {
-      "name": "secure-properties",
-      "title": "Secure Properties",
+      "name": "encrypt",
+      "title": "Encrypt",
       "description": "Encrypts a given prompt string using Blowfish CBC encryption.",
       "mode": "view"
     },
     {
-      "name": "generate-jks",
-      "title": "Generate .jks",
-      "description": "",
-      "mode": "no-view"
+      "name": "decrypt",
+      "title": "Decrypt",
+      "description": "Decrypts a given prompt string using Blowfish CBC decryption.",
+      "mode": "view"
     }
   ],
   "preferences": [
     {
-      "description": "Encryption default password.",
+      "description": "Encryption/Decryption default password.",
       "type": "password",
       "name": "defaultPassword",
       "title": "Default Password",
